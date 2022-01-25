@@ -6,3 +6,4 @@ All code and files relevant to EECE.4520 Microprocessors II
 This repository will contain the three labs required in this course, which will reinforce our learning in Microprocessors II.
 
 #### This is for the first lab
+The first lab is designed to blink an LED on the Arduino Microcontroller
