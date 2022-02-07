@@ -83,7 +83,7 @@ void loop()
       digitalWrite(buzzer, HIGH);
 
       // blink yellow LED (200ms) for 3 seconds ... 3sec/0.4 = 15 times
-      while(loop_index <= 15){
+      while(loop_index < 15){
         digitalWrite(yellow_led, blinking);
         delay(200);
         blinking = !blinking;
