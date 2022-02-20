@@ -68,7 +68,7 @@ void loop()
       digitalWrite(green_led, HIGH);
       delay(17000);
       digitalWrite(buzzer, HIGH);
-      delay(2000);
+      delay(3000);
       digitalWrite(buzzer, LOW);
       digitalWrite(green_led, LOW);
       state_3 = false;
