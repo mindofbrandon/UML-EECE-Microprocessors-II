@@ -1,5 +1,5 @@
 // Predefine pin values
-int button = 2;                       // Refer to the pin mapping for atmega2560 -- pin 21 being interrupt 0
+int button = 2;                      
 int buzzer = 10;
 int red_led = 11;
 int yellow_led = 12;
