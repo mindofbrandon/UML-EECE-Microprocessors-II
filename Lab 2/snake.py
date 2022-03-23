@@ -128,14 +128,15 @@ while True:
         value = ser.readline().decode("utf-8")
         #print(value)                               #un-comment for debug
 
-        # If the information received includes 'U' move up, 'D' move down, 'R' move right, and 'L' move left
-        if 'U' in value:
+        # If the information received includes 'U' move up, 'D' move down, 'R' move right, and 'L' move left -- (joystick)
+        # Or if the information received Arduino includes 'U_gyro' move up, 'D_gyro' move down, 'R_gyro' move right, and 'L_gyro' move left  -- (Gyro)
+        if 'U' in value or 'U_gyro' in value:
             head.direction = "up"
-        elif 'D' in value:
+        elif 'D' in value or 'D_gyro' in value:
             head.direction = "down"
-        elif 'R' in value:
+        elif 'R' in value or 'R_gyro' in value:
             head.direction = "right"
-        elif 'L' in value:
+        elif 'L' in value or 'L_gyro' in value:
             head.direction = "left"
 
     # Check for a collision with the border
