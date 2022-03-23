@@ -168,7 +168,10 @@ while True:
         # you need to send a flag to Arduino indicating an apple is eaten
         # so that the Arduino will beep the buzzer
         # Hint: refer to the example at Serial-RW/pyserial-test.py
-
+        
+        # Send information to the arduino that the apple has been eaten
+        ser.write(b'E')
+        
         # Move the food to a random spot
         x = random.randint(-290, 290)
         y = random.randint(-290, 290)
