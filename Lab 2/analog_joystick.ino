@@ -3,6 +3,8 @@ int incomingByte = 0;
 int joystick_x = A0;
 int joystick_y = A1;
 
+int buzzer = 7;
+
 int xVal = 0;
 int yVal = 0;
 
@@ -15,6 +17,7 @@ void setup()
   Serial.begin(9600); 
   pinMode(joystick_x, INPUT);
   pinMode(joystick_y, INPUT);
+  pinMode(buzzer, OUTPUT);
   
 }
 
@@ -61,10 +64,18 @@ void loop()
   {
     // Read the incoming byte:
     incomingByte = Serial.read(); 
+   
+    // If the incoming byte icludes 'E' then turn on buzzer because the apple is eaten
+    if (incomingByte == 'E'){
+      digitalWrite(buzzer, HIGH);
+    }
   }
 
   // Call to function snake_direction()
   Serial.print(snake_direction());
   
   delay(100);
+ 
+  // Turn off buzzer after a 100ms delay
+  digitalWrite(buzzer, LOW);
 }
