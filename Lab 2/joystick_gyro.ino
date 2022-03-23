@@ -4,6 +4,13 @@
 const int MPU_addr=0x68;  // I2C address of the MPU-6050
 int16_t accelerometer_x, accelerometer_y;
 
+  // Brandon's zones:
+  // def,x defaulty = -3,38
+  
+  // ymin, ymax = -512,560
+  // xmin, xmax = -520, 512
+
+
 int incomingByte = 0;
 
 int joystick_x = A0;
