@@ -122,7 +122,7 @@ while True:
     #
 
     # Receive info from arduino while there are bytes in the receive buffer "in_waiting"
-    while (ser.in_waiting):
+    while ser.in_waiting:
 
         # Receive information from arduino and convert bytes to string using decode("utf-8")
         value = ser.readline().decode("utf-8")
