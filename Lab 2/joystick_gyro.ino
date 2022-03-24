@@ -51,31 +51,32 @@ char snake_direction_joystick()
   x_axis_output = map(xVal, 8, 1023, -512, 512);    
   y_axis_output = map(yVal, 46, 1023, 512, -512);    
 
-  // If x-axis outupt is greater than 20 print "R" for right
-  if (x_axis_output > 20)
+  // If x-axis outupt is greater than 100 print "R" for right
+  if (x_axis_output > 100)
   {
     Serial.print("R");
   }
 
-  // Else iff x-axis outupt is less than -20 print "L" for left
-  else if (x_axis_output < -20)
+  // Else iff x-axis outupt is less than -100 print "L" for left
+  else if (x_axis_output < -100)
   {
     Serial.print("L");
   }
 
-  // If y-axis outupt is greater than 20 print "U" for up
-  if (y_axis_output > 20)
+  // If y-axis outupt is greater than 100 print "U" for up
+  if (y_axis_output > 100)
   {
     Serial.print("U");
   }
 
-  // If y-axis outupt is less than -20 print "D" for down
-  else if (y_axis_output < -20)
+  // If y-axis outupt is less than -100 print "D" for down
+  else if (y_axis_output < -100)
   {
     Serial.print("D");
   }
 }
 
+// Function to get accelerometer value and convert it to the direction that the snake should be going
 char snake_direction_gyro()
 {
   Wire.beginTransmission(MPU_addr);
