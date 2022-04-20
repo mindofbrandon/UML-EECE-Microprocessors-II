@@ -14,6 +14,18 @@ const int threeSpeed = 192;
 const int fullSpeed = 255;
 const String C = "C"; // clockwise
 const String CC = "CC"; // counter clockwise
+bool speedBottom;
+bool speedTop;
+
+// Variables will change:
+int ledState = HIGH;         // the current state of the output pin
+int buttonState = LOW;             // the current reading from the input pin
+int lastButtonState = HIGH;  // the previous reading from the input pin
+
+// the following variables are unsigned longs because the time, measured in
+// milliseconds, will quickly become a bigger number than can be stored in an int.
+unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
+unsigned long debounceDelay = 5000;    // the debounce time; increase if the output flickers
 
 bool state = HIGH;
 
@@ -26,13 +38,30 @@ LiquidCrystal lcd(7,8,9,10,11,12);
 
 
 void interrupt_service() { // function to change direction
-   state = !state;
+   
+   //sample the state of the button - is it pressed or not?
+  buttonState = digitalRead(button);
+  //Serial.print(buttonState);
+  //filter out any noise by setting a time buffer
+  if ( (millis() - lastDebounceTime) > debounceDelay) {
+
+    //if the button has been pressed, lets toggle the LED from "off to on" or "on to off"
+    if (buttonState == HIGH) {
+      delay(50);
+      state = !state;
     
     // Update directions
-    Serial.println("change dir");
+    //Serial.println("change dir");
     digitalWrite(DIRA, state);
     digitalWrite(DIRB, !state);
-    lcd.print("changing dir!");
+    //lcd.print("changing dir!");
+
+      Serial.print("button pressed");
+    }
+  }
+  //delay(500);
+   
+   
 }
 
 
@@ -42,7 +71,7 @@ void interrupt_service() { // function to change direction
 void setup() {
   // put your setup code here, to run once:
 
-  pinMode(button, INPUT_PULLUP);       // Button
+  pinMode(button, INPUT);       // Button
 
   Serial.println("Initialize RTC module");
   // Initialize DS1307
@@ -65,18 +94,22 @@ void setup() {
   Serial.begin(9600);
   
   lcd.begin(16,2); // setup columns and rows
+  digitalWrite(DIRA, state);
+  digitalWrite(DIRB, !state);
 
   //lcd.print("Hello, World!");
 
    // setup ISR to detect button press to change fan rotation "C" = clockwise "CC" = counterclockwise
   // When there is a change in pin values [0,1] (button pressed) then move to the ISR
-  attachInterrupt(digitalPinToInterrupt(button), interrupt_service, RISING);
+  attachInterrupt(digitalPinToInterrupt(button), interrupt_service, CHANGE);
 
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 
+  
+  
   dt = clock1.getDateTime();
 
   // For leading zero look to DS3231_dateformat example
@@ -87,7 +120,8 @@ void loop() {
   Serial.print(dt.day);    Serial.print(" ");
   Serial.print(dt.hour);   Serial.print(":");
   Serial.print(dt.minute); Serial.print(":");
-  Serial.print(dt.second); Serial.println("");
+  Serial.print(dt.second); Serial.println(" ");
+  //Serial.print(dt.unixtime);
 
 
   
@@ -106,10 +140,47 @@ void loop() {
 
     // function to write fan speed and direction
     
-    digitalWrite(DIRA, state);
-    digitalWrite(DIRB, !state);
-    analogWrite(ENABLE,70); //enable on
     
+    //analogWrite(ENABLE,70); //enable on
+    
+
+    Serial.println("change fan speed");
+    // function to write fan speed 
+    if (dt.second == 30) {
+    speedBottom = !speedBottom;
+
+    if (speedBottom) {
+      analogWrite(ENABLE, offSpeed);
+      Serial.print("Speed is off");
+      lcd.clear();
+      lcd.print("off");
+    }
+    else {
+      analogWrite(ENABLE, halfSpeed);
+      Serial.print("Speed is half");
+      lcd.clear();
+      lcd.print("half");
+    }
+    }
+
+    if (dt.second == 0) {
+    speedTop = !speedTop;
+
+    if (speedTop) {
+      analogWrite(ENABLE, threeSpeed);
+      Serial.print("Speed is three fourths");
+      lcd.clear();
+      lcd.print("3/4");
+    }
+    else {
+      analogWrite(ENABLE, fullSpeed);
+      Serial.print("Speed is full");
+      lcd.clear();
+      lcd.print("full");
+    }
+    }
+   
+  
   }
   
 
@@ -117,7 +188,7 @@ void loop() {
   // setup ISR to update clock, rpm, and direction on LCD every second
 
  
-
+  //lastButtonState = reading;
 
 
 }
