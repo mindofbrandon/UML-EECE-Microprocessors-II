@@ -12,10 +12,9 @@ const int offSpeed = 0;
 const int halfSpeed = 127;
 const int threeSpeed = 192;
 const int fullSpeed = 255;
-const String C = "C"; // clockwise
-const String CC = "CC"; // counter clockwise
 bool speedBottom;
 bool speedTop;
+int speedPrint;
 
 // Variables will change:
 int ledState = HIGH;         // the current state of the output pin
@@ -37,41 +36,65 @@ int i;
 LiquidCrystal lcd(7,8,9,10,11,12);
 
 
-void interrupt_service() { // function to change direction
+void interrupt_service() 
+{ // function to change fan direction
    
    //sample the state of the button - is it pressed or not?
-  buttonState = digitalRead(button);
-  //Serial.print(buttonState);
-  //filter out any noise by setting a time buffer
-  if ( (millis() - lastDebounceTime) > debounceDelay) {
+    buttonState = digitalRead(button);
+    //Serial.print(buttonState);
+    //filter out any noise by setting a time buffer
+    if ( (millis() - lastDebounceTime) > debounceDelay) 
+    {
 
-    //if the button has been pressed, lets toggle the LED from "off to on" or "on to off"
-    if (buttonState == HIGH) {
-      delay(50);
-      state = !state;
+      //if the button has been pressed, lets toggle the LED from "off to on" or "on to off"
+      if (buttonState == HIGH) 
+      {
+        delay(50);
+        state = !state;
     
-    // Update directions
-    //Serial.println("change dir");
-    digitalWrite(DIRA, state);
-    digitalWrite(DIRB, !state);
-    //lcd.print("changing dir!");
+      // Update directions
+      //Serial.println("change dir");
+      digitalWrite(DIRA, state);
+      digitalWrite(DIRB, !state);
+      //lcd.print("changing dir!");
 
       Serial.print("button pressed");
-    }
+      }
   }
   //delay(500);
-   
-   
 }
 
 
 
 
 
-void setup() {
-  // put your setup code here, to run once:
+void setup() 
+{
 
-  pinMode(button, INPUT);       // Button
+   
+   // 1 second timer interrupt setup NOT WORKING
+   /* FIXME timer interrupt creation not working
+    cli();//stop interrupts
+
+  //set timer1 interrupt at 1Hz
+  TCCR1A = 0;// set entire TCCR1A register to 0
+  TCCR1B = 0;// same for TCCR1B
+  TCNT1  = 0;//initialize counter value to 0
+  // set compare match register for 1hz increments
+  OCR1A = 15624;// = (16*10^6) / (1*1024) - 1 (must be <65536)
+  // turn on CTC mode
+  TCCR1B |= (1 << WGM12);
+  // Set CS12 and CS10 bits for 1024 prescaler
+  TCCR1B |= (1 << CS12) | (1 << CS10);  
+  // enable timer compare interrupt
+  TIMSK1 |= (1 << OCIE1A);
+
+  sei();//allow interrupts
+   
+   
+   */
+   
+  pinMode(button, INPUT);       // Button for change direction
 
   Serial.println("Initialize RTC module");
   // Initialize DS1307
@@ -87,25 +110,73 @@ void setup() {
        Comment this line out to store the memory of DS3231 module
   */
 
-
+  // enable dc motor direction
   pinMode(ENABLE, OUTPUT);
   pinMode(DIRA, OUTPUT);
   pinMode(DIRB, OUTPUT);
-  Serial.begin(9600);
-  
-  lcd.begin(16,2); // setup columns and rows
   digitalWrite(DIRA, state);
   digitalWrite(DIRB, !state);
 
-  //lcd.print("Hello, World!");
+  // serial monitor
+  Serial.begin(9600);
+  
+  lcd.begin(16,2); // setup columns and rows
 
-   // setup ISR to detect button press to change fan rotation "C" = clockwise "CC" = counterclockwise
+  
+  // setup ISR to detect button press to change fan rotation "C" = clockwise "CC" = counterclockwise
   // When there is a change in pin values [0,1] (button pressed) then move to the ISR
   attachInterrupt(digitalPinToInterrupt(button), interrupt_service, CHANGE);
 
 }
 
-void loop() {
+// FIXME add timer interrupt setup code
+ISR(Timer1_COMPA_vect) // update display every second
+{
+
+  // print time
+  lcd.clear(); // clear lcd before new print
+  lcd.print("Time: ");
+  lcd.print(dt.hour);   lcd.print(":");
+  lcd.print(dt.minute); lcd.print(":");
+  lcd.print(dt.second); lcd.print(" ");
+  
+  lcd.print(dt.second);
+
+  // print clockwise or counterclockwise direction
+  if (state) {
+    lcd.print("C ");
+  }
+  else (!state) {
+    lcd.print("CC ");
+  }
+
+  // print fan speed
+  switch (speedPrint) 
+  {
+  case 0:
+  lcd.print("0 ");
+  break;
+  
+  case 1:
+  lcd.print("1/2 ");
+  break;
+  
+  case 2:
+  lcd.print("3/4 ");
+  break;
+  
+  case 3:
+  lcd.print("Full ");
+  break;
+  }
+
+  
+
+  
+}
+
+void loop() 
+{
   // put your main code here, to run repeatedly:
 
   
@@ -113,82 +184,61 @@ void loop() {
   dt = clock1.getDateTime();
 
   // For leading zero look to DS3231_dateformat example
-
-  Serial.print("Raw data: ");
-  Serial.print(dt.year);   Serial.print("-");
-  Serial.print(dt.month);  Serial.print("-");
-  Serial.print(dt.day);    Serial.print(" ");
-  Serial.print(dt.hour);   Serial.print(":");
-  Serial.print(dt.minute); Serial.print(":");
-  Serial.print(dt.second); Serial.println(" ");
-  //Serial.print(dt.unixtime);
-
-
-  
-
-
-  delay(1000);
-
-
-  
  
   //---PWM example, full speed then slow
 
   // if clock is at beginning of a minute, turn fan on for 30s
-  if (dt.second == 0 || dt.second == 30) {
+  if (dt.second == 0 || dt.second == 30) // added 30 second interval to test dc motor on faster
+  {
     Serial.println("Start The Motors!");
 
     // function to write fan speed and direction
     
-    
-    //analogWrite(ENABLE,70); //enable on
-    
-
-    Serial.println("change fan speed");
     // function to write fan speed 
-    if (dt.second == 30) {
-    speedBottom = !speedBottom;
+    if (dt.second == 30) 
+    Serial.println("change fan speed");
+    {
+      speedBottom = !speedBottom;
 
-    if (speedBottom) {
-      analogWrite(ENABLE, offSpeed);
-      Serial.print("Speed is off");
-      lcd.clear();
-      lcd.print("off");
-    }
-    else {
-      analogWrite(ENABLE, halfSpeed);
-      Serial.print("Speed is half");
-      lcd.clear();
-      lcd.print("half");
-    }
+      if (speedBottom) 
+      {
+        analogWrite(ENABLE, offSpeed);
+        Serial.print("Speed is off");
+        speedPrint = 0;
+        //lcd.clear();
+        //lcd.print("off");
+      }
+      else 
+      {
+        analogWrite(ENABLE, halfSpeed);
+        Serial.print("Speed is half");
+        speedPrint = 1;
+        //lcd.clear();
+        //lcd.print("half");
+      }
     }
 
-    if (dt.second == 0) {
-    speedTop = !speedTop;
+    if (dt.second == 0) 
+    Serial.println("change fan speed");
+    {
+      speedTop = !speedTop;
 
-    if (speedTop) {
-      analogWrite(ENABLE, threeSpeed);
-      Serial.print("Speed is three fourths");
-      lcd.clear();
-      lcd.print("3/4");
+      if (speedTop) 
+      {
+        analogWrite(ENABLE, threeSpeed);
+        Serial.print("Speed is three fourths");
+        speedPrint = 2;
+        //lcd.clear();
+        //lcd.print("3/4");
+      }
+      else 
+      {
+        analogWrite(ENABLE, fullSpeed);
+        Serial.print("Speed is full");
+        speedPrint = 3;
+        
+        //lcd.print("full");
+      }
     }
-    else {
-      analogWrite(ENABLE, fullSpeed);
-      Serial.print("Speed is full");
-      lcd.clear();
-      lcd.print("full");
-    }
-    }
-   
-  
   }
-  
-
-
-  // setup ISR to update clock, rpm, and direction on LCD every second
-
- 
-  //lastButtonState = reading;
-
-
 }
